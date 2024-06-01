@@ -1,28 +1,16 @@
-from flask import Flask, request, jsonify
-import logging
-from database import OperatorAliases
-from elastic import client as elastic_client
+from flask_base import MainServer, request
 from parser import parse_custom_query_into_kql
 
-logger = logging.getLogger(__name__)
-app = Flask(__name__)
-database = OperatorAliases()
+app = MainServer(__name__)
 
 
-@app.route('/search', methods=['POST'])
+@app.route('/search', methods=['GET'])
+@app.require_api_key
 def search():
-    api_key = request.json['api_key']
-    custom_query = request.json['query']
-    if not api_key:
-        return {'error': 'Unauthorized', 'data': ''}, 401
-    if not database.get_api_key(api_key):
-        return {'error': 'Unauthorized', 'data': ''}, 401
-    try:
-        parsed_query = parse_custom_query_into_kql(custom_query)
-    except:
-        return {'error': 'Invalid query', 'data': ''}, 400
-    data = elastic_client.search(query=parsed_query).body
-    return {'error': '', 'data': data}, 200
+    custom_query = request.json.get('query')
+    kql_query = parse_custom_query_into_kql(custom_query=custom_query)
+    data = app.elasticsearch_connection.search(query=kql_query).body
+    return {'error': '', 'data': data}
 
 
 if __name__ == '__main__':

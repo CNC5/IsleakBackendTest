@@ -1,6 +1,5 @@
 import os
 import dataclasses
-import argparse
 # Server code under no circumstances is supposed to run outside a docker container -> environment is consistent
 
 
@@ -32,7 +31,7 @@ class DatabaseConfig(AnyConfigFromEnv):
 
 
 @dataclasses.dataclass
-class ElasticSearchConfig(AnyConfigFromEnv):
+class ElasticsearchConfig(AnyConfigFromEnv):
     elastic_host: str
     elastic_port: str
     elastic_username: str
