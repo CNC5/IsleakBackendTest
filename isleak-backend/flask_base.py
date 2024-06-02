@@ -6,7 +6,7 @@ import sqlalchemy.orm
 from sqlalchemy.engine import Engine
 from elasticsearch import Elasticsearch
 from config import DatabaseConfig, ElasticsearchConfig
-from database import APIKey
+from database import APIKey, Base
 
 
 class MainServer(Flask):
@@ -25,12 +25,12 @@ class MainServer(Flask):
             f'postgresql+psycopg2://{self.database_config.db_user}:{self.database_config.db_pass}'
             f'@{self.database_config.db_host}:{self.database_config.db_port}/{self.database_config.db_name}',
             pool_size=256, pool_timeout=120, max_overflow=0, poolclass=QueuePool)
-        self.database_session_factory = sqlalchemy.orm.sessionmaker(self.database_engine)
+        self.database_session_factory = sqlalchemy.orm.sessionmaker(bind=self.database_engine)
         self.elasticsearch_connection = Elasticsearch(
             f'https://{self.elasticsearch_config.elastic_host}:{self.elasticsearch_config.elastic_port}',
-            verify_certs=False, ca_certs=self.elasticsearch_config.elastic_certificate_path,
+            verify_certs=True, ca_certs=self.elasticsearch_config.elastic_certificate_authority_path,
             basic_auth=(self.elasticsearch_config.elastic_username, self.elasticsearch_config.elastic_password))
-        APIKey.metadata.create_all(self.database_engine)
+        Base.metadata.create_all(self.database_engine)
 
     # database_operator_instance.insert_rows([APIKey(key_name)])
     def insert_rows(self, data: list) -> bool:

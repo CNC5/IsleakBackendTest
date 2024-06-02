@@ -257,6 +257,7 @@ services:
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_CERTIFICATE_PATH=/app/certs/es01/es01.crt
+      - ELASTIC_CERTIFICATE_AUTHORITY_PATH=/app/certs/ca/ca.crt
     networks:
       - backbone
 

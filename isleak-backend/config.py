@@ -1,5 +1,6 @@
 import os
 import dataclasses
+
 # Server code under no circumstances is supposed to run outside a docker container -> environment is consistent
 
 
@@ -36,7 +37,7 @@ class ElasticsearchConfig(AnyConfigFromEnv):
     elastic_port: str
     elastic_username: str
     elastic_password: str
-    elastic_certificate_path: str
+    elastic_certificate_authority_path: str
 
     def __init__(self):
         super().__init__()

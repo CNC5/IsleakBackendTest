@@ -12,6 +12,7 @@ class Base(sqlalchemy.orm.DeclarativeBase):
         return data_dict
 
 
+@dataclasses.dataclass
 class APIKey(Base):
     __tablename__ = 'api_keys'
 
