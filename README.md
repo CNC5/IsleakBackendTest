@@ -8,7 +8,7 @@ Send a POST request to the server (default address is `localhost:9601`) targetin
 ` {"api_key": "api key", "query":"query"} `
 
 Curl example:<br>
-` curl -X POST -H "Content-Type: application/json" --data '{"api_key": "api key", "query":"query"}' 'http://localhost:9601/search' `
+` curl -X GET -H "Content-Type: application/json" --data '{"api_key": "api key", "query":"query"}' 'http://localhost:9601/search' `
 
 ### Query format
 Query is formed using keywords, AND/OR statements and parenthesis<br>
