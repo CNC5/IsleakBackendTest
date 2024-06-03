@@ -1,5 +1,5 @@
 from flask_base import MainServer, request
-from parser import parse_custom_query_into_kql
+from parser import parse_custom_query_into_kql, InvalidQueryException
 
 app = MainServer(__name__)
 
@@ -8,7 +8,10 @@ app = MainServer(__name__)
 @app.require_api_key
 def search():
     custom_query = request.json.get('query')
-    kql_query = parse_custom_query_into_kql(custom_query=custom_query)
+    try:
+        kql_query = parse_custom_query_into_kql(custom_query=custom_query)
+    except InvalidQueryException as e:
+        return {'error': str(e), 'data': ''}
     data = app.elasticsearch_connection.search(query=kql_query).body
     return {'error': '', 'data': data}
 
