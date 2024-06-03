@@ -3,17 +3,17 @@ version: "3.8"
 volumes:
   certs:
     driver: local
-  esdata01:
+  esdata:
     driver: local
   kibanadata:
     driver: local
-  metricbeatdata01:
+  metricbeatdata:
     driver: local
-  filebeatdata01:
+  filebeatdata:
     driver: local
-  logstashdata01:
+  logstashdata:
     driver: local
-  postgresdata01:
+  postgresdata:
     driver: local
 
 networks:
@@ -45,9 +45,9 @@ services:
           echo "Creating certs";
           echo -ne \
           "instances:\n"\
-          "  - name: es01\n"\
+          "  - name: es\n"\
           "    dns:\n"\
-          "      - es01\n"\
+          "      - es\n"\
           "      - localhost\n"\
           "    ip:\n"\
           "      - 127.0.0.1\n"\
@@ -66,20 +66,20 @@ services:
         find . -type d -exec chmod 750 \{\} \;;
         find . -type f -exec chmod 640 \{\} \;;
         echo "Waiting for Elasticsearch availability";
-        until curl -s --cacert config/certs/ca/ca.crt https://es01:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
+        until curl -s --cacert config/certs/ca/ca.crt https://es:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
-        until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es01:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://es:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
         echo "All done!";
       '
     healthcheck:
-      test: ["CMD-SHELL", "[ -f config/certs/es01/es01.crt ]"]
+      test: ["CMD-SHELL", "[ -f config/certs/es/es.crt ]"]
       interval: 1s
       timeout: 5s
       retries: 120
     networks:
       - backbone
 
-  es01:
+  es:
     depends_on:
       setup:
         condition: service_healthy
@@ -89,23 +89,23 @@ services:
       co.elastic.logs/module: elasticsearch
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
-      - esdata01:/usr/share/elasticsearch/data
+      - esdata:/usr/share/elasticsearch/data
     ports:
       - ${ES_PORT}:9200
     environment:
-      - node.name=es01
+      - node.name=es
       - cluster.name=${ELASTIC_CLUSTER_NAME}
       - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - bootstrap.memory_lock=true
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
-      - xpack.security.http.ssl.key=certs/es01/es01.key
-      - xpack.security.http.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.http.ssl.key=certs/es/es.key
+      - xpack.security.http.ssl.certificate=certs/es/es.crt
       - xpack.security.http.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.enabled=true
-      - xpack.security.transport.ssl.key=certs/es01/es01.key
-      - xpack.security.transport.ssl.certificate=certs/es01/es01.crt
+      - xpack.security.transport.ssl.key=certs/es/es.key
+      - xpack.security.transport.ssl.certificate=certs/es/es.crt
       - xpack.security.transport.ssl.certificate_authorities=certs/ca/ca.crt
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${ELASTIC_LICENSE}
@@ -128,7 +128,7 @@ services:
 
   kibana:
     depends_on:
-      es01:
+      es:
         condition: service_healthy
     image: harbor.lolava.xyz/elastic/kibana/kibana:${ELASTIC_STACK_VERSION}
     labels:
@@ -140,7 +140,7 @@ services:
       - ${KIBANA_PORT}:5601
     environment:
       - SERVERNAME=kibana
-      - ELASTICSEARCH_HOSTS=https://es01:9200
+      - ELASTICSEARCH_HOSTS=https://es:9200
       - ELASTICSEARCH_USERNAME=kibana_system
       - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
@@ -160,9 +160,9 @@ services:
     networks:
       - backbone
 
-  metricbeat01:
+  metricbeat:
     depends_on:
-      es01:
+      es:
         condition: service_healthy
       kibana:
         condition: service_healthy
@@ -170,7 +170,7 @@ services:
     user: root
     volumes:
       - certs:/usr/share/metricbeat/certs
-      - metricbeatdata01:/usr/share/metricbeat/data
+      - metricbeatdata:/usr/share/metricbeat/data
       - "./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "/sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro"
@@ -179,23 +179,23 @@ services:
     environment:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_HOSTS=https://es:9200
       - KIBANA_HOSTS=http://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash01:9600
+      - LOGSTASH_HOSTS=http://logstash:9600
     command:
       - --strict.perms=false
     networks:
       - backbone
 
-  filebeat01:
+  filebeat:
     depends_on:
-      es01:
+      es:
         condition: service_healthy
     image: harbor.lolava.xyz/elastic/beats/filebeat:${ELASTIC_STACK_VERSION}
     user: root
     volumes:
       - certs:/usr/share/filebeat/certs
-      - filebeatdata01:/usr/share/filebeat/data
+      - filebeatdata:/usr/share/filebeat/data
       - "./filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
       - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
       - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
@@ -203,17 +203,17 @@ services:
     environment:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_HOSTS=https://es:9200
       - KIBANA_HOSTS=http://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash01:9600
+      - LOGSTASH_HOSTS=http://logstash:9600
     command:
       - --strict.perms=false
     networks:
       - backbone
 
-  logstash01:
+  logstash:
     depends_on:
-      es01:
+      es:
         condition: service_healthy
       kibana:
         condition: service_healthy
@@ -223,20 +223,20 @@ services:
     user: root
     volumes:
       - certs:/usr/share/logstash/certs
-      - logstashdata01:/usr/share/logstash/data
+      - logstashdata:/usr/share/logstash/data
       - "./logstash_ingest_data/:/usr/share/logstash/ingest_data/"
       - "./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     environment:
       - xpack.monitoring.enabled=false
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://es01:9200
+      - ELASTIC_HOSTS=https://es:9200
     networks:
       - backbone
 
   backend:
     depends_on:
-      es01:
+      es:
         condition: service_healthy
       postgres:
         condition: service_healthy
@@ -252,12 +252,22 @@ services:
       - DB_NAME=${POSTGRES_USER}
       - DB_USER=${POSTGRES_USER}
       - DB_PASS=${POSTGRES_POSTGRES_PASSWORD}
-      - ELASTIC_HOST=es01
+      - ELASTIC_HOST=es
       - ELASTIC_PORT=9200
       - ELASTIC_USERNAME=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_CERTIFICATE_PATH=/app/certs/es01/es01.crt
+      - ELASTIC_CERTIFICATE_PATH=/app/certs/es/es.crt
       - ELASTIC_CERTIFICATE_AUTHORITY_PATH=/app/certs/ca/ca.crt
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s localhost:5000/ping | grep pong",
+        ]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
     networks:
       - backbone
 
@@ -265,7 +275,7 @@ services:
     restart: on-failure
     image: postgres:${POSTGRES_VERSION}
     volumes:
-      - postgresdata01:/var/lib/postgresql/data
+      - postgresdata:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_POSTGRES_PASSWORD}

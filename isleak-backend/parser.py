@@ -23,20 +23,20 @@ def recursively_assemble_kql_query(query_data: list | str) -> dict:
     raise Exception('Invalid query')
 
 
-def _unwrap(data: list[list | str]):
+def _readable_unwrap(data: list[list | str]):
     if type(data) == list[str]:
         return " ".join(data)
     elif type(data) == str:
         return data
     else:
-        return f'({" ".join([_unwrap(item) for item in data])})'
+        return f'({" ".join([_readable_unwrap(item) for item in data])})'
 
 
 def recursively_disassemble_custom_query(query_data: list | str) -> list[list | str]:
     if type(query_data) == str:
         return query_data
     if len(query_data) != 3:
-        raise InvalidQueryException(f'Query \'{_unwrap(query_data)}\' '
+        raise InvalidQueryException(f'Query \'{_readable_unwrap(query_data)}\' '
                                     f'is {"more" if len(query_data) > 3 else "less"} than 3 key tokens')
     if query_data[1].lower() == 'and':
         return ['and',
@@ -46,7 +46,7 @@ def recursively_disassemble_custom_query(query_data: list | str) -> list[list | 
         return ['or',
                 recursively_disassemble_custom_query(query_data[0]),
                 recursively_disassemble_custom_query(query_data[2])]
-    raise InvalidQueryException(f'Query \'{_unwrap(query_data)}\' '
+    raise InvalidQueryException(f'Query \'{_readable_unwrap(query_data)}\' '
                                 f'does not contain OR/AND statement between keywords')
 
 

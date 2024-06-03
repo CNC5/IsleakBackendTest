@@ -3,16 +3,9 @@ import dataclasses
 from typing import Optional
 
 
-class Base(sqlalchemy.orm.DeclarativeBase):
-    def as_dict(self):
-        data_dict = {}
-        for field in dataclasses.fields(self):
-            value = getattr(self, field.name)
-            data_dict.update({field.name: value})
-        return data_dict
+Base = sqlalchemy.orm.declarative_base()
 
 
-@dataclasses.dataclass
 class APIKey(Base):
     __tablename__ = 'api_keys'
 

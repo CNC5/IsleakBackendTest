@@ -8,8 +8,8 @@ metricbeat.modules:
   period: 10s
   hosts: ${ELASTIC_HOSTS}
   ssl.certificate_authorities: "certs/ca/ca.crt"
-  ssl.certificate: "certs/es01/es01.crt"
-  ssl.key: "certs/es01/es01.key"
+  ssl.certificate: "certs/es/es.crt"
+  ssl.key: "certs/es/es.key"
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
   ssl.enabled: true
@@ -51,7 +51,7 @@ output.elasticsearch:
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
   ssl:
-    certificate: "certs/es01/es01.crt"
+    certificate: "certs/es/es.crt"
     certificate_authorities: "certs/ca/ca.crt"
-    key: "certs/es01/es01.key"
+    key: "certs/es/es.key"
 
