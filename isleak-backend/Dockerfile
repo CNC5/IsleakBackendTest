@@ -3,4 +3,4 @@ RUN pip install sqlalchemy flask elasticsearch pyparsing psycopg2 pytest gunicor
 COPY . /app
 
 WORKDIR /app
-ENTRYPOINT ["/usr/local/bin/gunicorn", "server:app", "--bind", "0.0.0.0:5000"]ddown
+ENTRYPOINT ["/usr/local/bin/gunicorn", "server:app", "--bind", "0.0.0.0:5000"]
